@@ -1,2 +1,2 @@
 
-Full-Stack Revision &amp; Portfolio 🚀 | 
+Full-Stack Revision &amp; Portfolio 🚀

@@ -6,7 +6,7 @@ const app = express();
 app.use(requestCountMiddleware);
 
 app.get("/user", (req, res) => {
-  res.json({ name: "keshav" });
+  res.status(400).json({ name: "keshav" });
 });
 
 app.get("/metrics", async (req, res) => {   

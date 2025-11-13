@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple WebSocket Chat Client</title>
+    
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            background-color: #f8f9fa; 
+        }
+        #chat-container { 
+            max-width: 600px; 
+            margin: 20px auto; 
+            border: 1px solid #ced4da; 
+            padding: 15px; 
+            border-radius: 8px;
+            background-color: #fff;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        #messages { 
+            height: 300px; 
+            overflow-y: auto; 
+            border: 1px solid #dee2e6; 
+            padding: 10px; 
+            margin-bottom: 15px; 
+            border-radius: 4px;
+            background-color: #e9ecef;
+        }
+        .message-box { 
+            background-color: #fff; 
+            padding: 8px 12px; 
+            margin: 8px 0; 
+            border-radius: 15px;
+            max-width: 80%;
+            word-wrap: break-word;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+        #message-input { 
+            width: calc(100% - 75px); 
+            padding: 10px; 
+            box-sizing: border-box; 
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+        }
+        #send-button { 
+            width: 70px; 
+            padding: 10px; 
+            margin-left: 5px; 
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        #send-button:hover {
+            background-color: #0056b3;
+        }
+        #status {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Simple WebSocket Chat</h1>
+
+    <div id="chat-container">
+        <div id="messages">
+            </div>
+        <input type="text" id="message-input" placeholder="Type your message...">
+        <button id="send-button">Send</button>
+        <p id="status">Status: Connecting...</p>
+    </div>
+
+    <script>
+        // DOM Elements
+        const messagesDiv = document.getElementById('messages');
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+        const statusP = document.getElementById('status');
+            
+        // WebSocket URL
+        const socket = new WebSocket('ws://localhost:8080/');
+
+        function displayMessage(text) {
+            const messageElement = document.createElement('div');
+            messageElement.className = 'message-box';
+            messageElement.textContent = text;
+            messagesDiv.appendChild(messageElement);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        // Connection Handling
+
+        socket.onopen = function(e) {
+            statusP.textContent = 'Status: Connected! You can start chatting.';
+            statusP.style.color = 'green';
+            console.log("[open] Connection established.");
+        };
+
+        socket.onmessage = function(event) {
+            displayMessage(event.data);
+            console.log(`[message] Data received from server: ${event.data}`);
+        };
+
+        socket.onclose = function(event) {
+            if (event.wasClean) {
+                statusP.textContent = `Status: Connection closed cleanly, code=${event.code} reason=${event.reason}`;
+                statusP.style.color = 'orange';
+            } else {
+                statusP.textContent = 'Status: Connection died (Check if server is running)';
+                statusP.style.color = 'red';
+            }
+            console.log(`[close] Connection closed: code=${event.code} reason=${event.reason}`);
+        };
+
+        socket.onerror = function(error) {
+            statusP.textContent = `Status: Error - Check your server connection.`;
+            statusP.style.color = 'red';
+            console.error(`[error] ${error.message}`);
+        };
+
+        // Function to send message
+
+        function sendMessage() {
+            const message = messageInput.value.trim();
+            if (message === "") return;
+
+            if (socket.readyState === WebSocket.OPEN) {
+                socket.send(message);
+                messageInput.value = '';
+            } else {
+                displayMessage("[CLIENT ERROR]: Not connected to server. Please wait or check status.");
+            }
+        }
+
+        // Event Listeners
+        sendButton.addEventListener('click', sendMessage);
+
+        messageInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+
+</body>
+</html>
